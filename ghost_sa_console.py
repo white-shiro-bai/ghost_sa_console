@@ -41,7 +41,7 @@ class console:
 
     def show_home(self):
         self.post_data = dict(self.inited_post)
-        self.func_home = [{"func_id":1,"func_key":"usergroup","func_name":"用户分群"},{"func_id":2,"func_key":"noti_group","func_name":"推送列表"},{"func_id":3,"func_key":"noti_temple","func_name":"推送模板"},{"func_id":4,"func_key":"scheduler_jobs","func_name":"分群任务列表"}]
+        self.func_home = [{"func_id":1,"func_key":"usergroup","func_name":"用户分群"},{"func_id":2,"func_key":"noti_group","func_name":"推送列表"},{"func_id":3,"func_key":"noti_temple","func_name":"推送模板"},{"func_id":4,"func_key":"scheduler_jobs","func_name":"分群任务列表"},{"func_id":5,"func_key":"create_manual","func_name":"手动执行该分群"}]
         self.func_key = ui(data={"type":"option","display_key":"func_id","func_key":"func_key","data":self.func_home})
         self.menu_history.append(self.func_key[0])
         self.menu()
@@ -120,6 +120,24 @@ class console:
                             print(self.get_data(url='/usergroups/apply_temples_list',params={"temple_id":self.temple_id_target[0],"data_id":self.data_selected,"owner":self.owner}))
                         self.menu_history = ['show_home']
                         self.show_home()
+
+    def create_manual(self):
+        while True:
+            self.post_data = dict(self.inited_post)
+            self.plan = self.get_data(url='/usergroups/show_usergroup_plan')
+            self.plan_id = ui(data={"desc":"选择要操作的分群","type":"option","display_key":"plan_id","func_key":"plan_id","data":self.plan["data"]})
+            if self.plan_id[1] == '~menu':
+                self.menu_history.append(self.plan_id[0])
+                self.menu()
+            else:
+                self.send_at_str = ui(data={"limit_func":True,"desc":"请输入分群执行的时间，格式 YYYY-MM-DD HH:MM:SS 不输入的话，则为立即发送","type":"keyword","display_key":"发送时间","allow_none":True})[0]
+                if self.send_at_str and self.send_at_str != '':
+                    self.send_at_int = get_time_array_from_nlp(self.send_at_str)['time_int']
+                    print(self.get_data(url='/usergroups/create_scheduler_jobs_manual',params={'plan_id':self.plan_id,"send_at":self.send_at_int}))
+                else:
+                    print(self.get_data(url='/usergroups/create_scheduler_jobs_manual',params={'plan_id':self.plan_id}))
+                self.menu_history = ['show_home']
+                self.show_home()
 
     def noti_group(self):
         while True:
